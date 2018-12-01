@@ -11,6 +11,16 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+let fs = require('fs');
+let http = require('http');
+let db = require('./fake-db');
+
+
+// let options = {
+//   hostname: null
+// }
+
+
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -19,7 +29,7 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var requestHandler = function(request, response) {
+var requestHandler = function (request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,14 +38,14 @@ var requestHandler = function(request, response) {
   //
   // Documentation for both request and response can be found in the HTTP section at
   // http://nodejs.org/documentation/api/
-  
+
   // Do some basic logging.
   //
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
- 
+  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
+
   // The outgoing status.
   var statusCode = 200;
 
@@ -48,20 +58,56 @@ var requestHandler = function(request, response) {
   // other than plain text, like JSON or HTML.
   headers['Content-Type'] = 'application/json';
 
+  if (request.method === 'GET' && request.url === '/classes/messages') {
+    console.log('GET REQUEST -----> ', request.url);
+    console.log('STATUS CODE ---------------------->', statusCode);
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end(JSON.stringify({results: []}));
+    // .writeHead() writes to the request line and headers of the response,
+    // which includes the status and all headers.
+    response.writeHead(statusCode, headers);
 
+    // Make sure to always call response.end() - Node may not send
+    // anything back to the client until you do. The string you pass to
+    // response.end() will be the body of the response - i.e. what shows
+    // up in the browser.
+    //
+    // Calling .end "flushes" the response's internal buffer, forcing
+    // node to actually send all the data over to the client.
+    response.end(JSON.stringify({
+      results: [db]
+    }));
+
+  }
+
+  if (request.method === 'POST') {
+    //console.log(request.url)
+    //console.log('-------------- POST REQUEST ------------')
+    let body = '';
+    
+    request.on('data', function (data) {
+      // body += JSON.parse(data);
+      body += data;
+      console.log('BODY: ', JSON.parse(body));
+      body = JSON.parse(body);
+      db.user = {};
+      db.user.username = body.username;
+      db.user.text = body.text;
+      console.log('DATABASE: ', db);
+      //console.log('BODY ---> ', body)
+      // console.log('BODY: ', body);
+
+      // console.log('DATABASE: ', db);
+    });
+
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({
+      results: [body]
+    }));
+  }
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
