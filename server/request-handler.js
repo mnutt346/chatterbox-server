@@ -77,13 +77,10 @@ var requestHandler = function (request, response) {
     //
     // Calling .end "flushes" the response's internal buffer, forcing
     // node to actually send all the data over to the client.
-    response.end(JSON.stringify({
-      results: [db]
-    }));
+    response.end(JSON.stringify(db));
 
-  }
-
-  if (request.method === 'POST') {
+  } else if (request.method === 'POST' && request.url === '/classes/messages') {
+    statusCode = 201;
     //console.log(request.url)
     //console.log('-------------- POST REQUEST ------------')
     let body = '';
@@ -91,22 +88,28 @@ var requestHandler = function (request, response) {
     request.on('data', function (data) {
       // body += JSON.parse(data);
       body += data;
-      console.log('BODY: ', JSON.parse(body));
       body = JSON.parse(body);
-      db.user = {};
-      db.user.username = body.username;
-      db.user.text = body.text;
+      let message = {};
+      message.username = body.username;
+      //db.user.username = body.username;
+      message.text = body.text;
+      db.results.push(message);
+      //db.user.text = body.text;
       console.log('DATABASE: ', db);
-      //console.log('BODY ---> ', body)
-      // console.log('BODY: ', body);
+      console.log(statusCode)
 
-      // console.log('DATABASE: ', db);
     });
 
     response.writeHead(statusCode, headers);
-    response.end(JSON.stringify({
-      results: [body]
-    }));
+    response.end()
+    // response.end(JSON.stringify({
+    //   results: [body]
+    // }));
+  } else {
+    statusCode = 404;
+    response.writeHead(statusCode, headers)
+    response.end()
+    console.log('------------- ERROR ------------')
   }
 };
 

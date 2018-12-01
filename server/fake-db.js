@@ -1,3 +1,7 @@
-let db = {};
+let db = {
+  results: []
+};
 
 module.exports = db;
+
+
