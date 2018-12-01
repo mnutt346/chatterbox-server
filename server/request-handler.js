@@ -29,7 +29,7 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var requestHandler = function (request, response) {
+exports.requestHandler = function (request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -47,7 +47,7 @@ var requestHandler = function (request, response) {
   //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
-  var statusCode = 200;
+  var statusCode;
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -59,12 +59,9 @@ var requestHandler = function (request, response) {
   headers['Content-Type'] = 'application/json';
 
   if (request.method === 'GET' && request.url === '/classes/messages') {
-    console.log('GET REQUEST -----> ', request.url);
-    console.log('STATUS CODE ---------------------->', statusCode);
-
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
+    // console.log('GET REQUEST -----> ', request.url);
+    // console.log('STATUS CODE ---------------------->', statusCode);
+    statusCode = 200;
 
     // .writeHead() writes to the request line and headers of the response,
     // which includes the status and all headers.
@@ -81,6 +78,7 @@ var requestHandler = function (request, response) {
 
   } else if (request.method === 'POST' && request.url === '/classes/messages') {
     statusCode = 201;
+    messageCounter = 1;
     //console.log(request.url)
     //console.log('-------------- POST REQUEST ------------')
     let body = '';
@@ -93,23 +91,25 @@ var requestHandler = function (request, response) {
       message.username = body.username;
       //db.user.username = body.username;
       message.text = body.text;
+      message.objectId = messageCounter;
       db.results.push(message);
+      messageCounter++;
       //db.user.text = body.text;
-      console.log('DATABASE: ', db);
-      console.log(statusCode)
+      // console.log('DATABASE: ', db);
+      // console.log(statusCode);
 
     });
 
     response.writeHead(statusCode, headers);
-    response.end()
+    response.end();
     // response.end(JSON.stringify({
     //   results: [body]
     // }));
   } else {
     statusCode = 404;
-    response.writeHead(statusCode, headers)
-    response.end()
-    console.log('------------- ERROR ------------')
+    response.writeHead(statusCode, headers);
+    response.end();
+    // console.log('------------- ERROR ------------');
   }
 };
 
@@ -124,5 +124,5 @@ var requestHandler = function (request, response) {
 // client from this domain by setting up static file serving.
 
 
-module.exports = requestHandler;
+
 
